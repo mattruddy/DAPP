@@ -7,6 +7,8 @@ import "./App.css";
 const App = () => {
   const [storageValue, setStorageValue] = useState(0);
   const [web3, setWeb3] = useState(null);
+  const [accounts, setAccounts] = useState();
+  const [contract, setContract] = useState();
 
   useEffect(() => {
     start();
@@ -28,9 +30,9 @@ const App = () => {
         deployedNetwork && deployedNetwork.address
       );
 
-      // Set web3, accounts, and contract to the state, and then proceed with an
-      // example of interacting with the contract's methods.
-      this.setState({ web3, accounts, contract: instance });
+      setWeb3(web3);
+      setAccounts(accounts);
+      setContract(instance);
 
       console.log(accounts[0]);
 
@@ -44,9 +46,8 @@ const App = () => {
     }
   };
 
-  handleCreate = async (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
-    const { contract, accounts, web3 } = this.state;
 
     console.log(contract);
 
@@ -59,9 +60,8 @@ const App = () => {
     }
   };
 
-  handleSend = async (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    const { contract, accounts } = this.state;
 
     contract.methods
       .safeTransferFrom(
@@ -76,14 +76,14 @@ const App = () => {
       });
   };
 
-  if (!this.state.web3) {
+  if (!web3) {
     return <div>Loading Web3, accounts, and contract...</div>;
   }
   return (
     <div className="App">
-      <button onClick={(e) => this.handleCreate(e)}>Create Token</button>
+      <button onClick={(e) => handleCreate(e)}>Create Token</button>
 
-      <button onClick={(e) => this.handleSend(e)}>Send</button>
+      <button onClick={(e) => handleSend(e)}>Send</button>
     </div>
   );
 };
