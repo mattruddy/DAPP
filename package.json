@@ -1,0 +1,17 @@
+{
+  "name": "dapp",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattruddy/DAPP.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mattruddy/DAPP/issues"
+  },
+  "homepage": "https://github.com/mattruddy/DAPP#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.0"
+  }
+}
