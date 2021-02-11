@@ -967,12 +967,21 @@
     "5777": {
       "events": {},
       "links": {},
+<<<<<<< HEAD
       "address": "0x8ea68327988b12892305B3864b74B1B3B53Ad46c",
       "transactionHash": "0x547640ad283ac30c8dfc5f605245d2eff01c12ccabffb9d09e3d466315f76e8e"
     }
   },
   "schemaVersion": "3.3.3",
   "updatedAt": "2021-02-11T02:50:09.173Z",
+=======
+      "address": "0xe056844DdAAaeD799cb8A008b11DB94Ea31090Cd",
+      "transactionHash": "0xa199e45d926ae239ef0c22e466549bac07dd0b70852a1fbfdc59b9a2bde3c691"
+    }
+  },
+  "schemaVersion": "3.2.5",
+  "updatedAt": "2021-02-11T15:38:20.219Z",
+>>>>>>> 6ac2c91326d9b33bad9c1d17e504cfad183c42fb
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}

@@ -4,11 +4,44 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 contract America is ERC1155 {
 
-    uint256 public constant NJ = 0;
-    uint256 public constant NY = 1;
+    address proxyRegistryAddress;
+    uint256 private _currentTokenID = 0;
+    mapping (uint256 => address) public creators;
+    mapping (uint256 => uint256) public tokenSupply;
 
-    constructor() public ERC1155("https://game.example/api/item/{id}.json") {
-        _mint(msg.sender, NJ, 10**18, "");
-        _mint(msg.sender, NY, 10**27, "");
+    // Contract name
+    string public name;
+    // Contract symbol
+    string public symbol;
+
+
+    modifier creatorOnly(uint256 _id) {
+        require(creators[_id] == msg.sender, "Creator Only");
+        _;
     }
+
+    constructor() public ERC1155("") {
+        name = "Land";
+        symbol = "LD";
+        proxyRegistryAddress = msg.sender;
+    }
+
+    function create(address _initialOwner, uint256 _initialSupply) external returns(uint256) {
+        uint256 _id = _getNextTokenID();
+        _incrementTokenTypeId();
+        creators[_id] = msg.sender;
+
+        _mint(_initialOwner, _id, _initialSupply, "");
+        tokenSupply[_id] = _initialSupply;
+        return _id;
+    }
+
+    function _getNextTokenID() private view returns (uint256) {
+        return _currentTokenID.add(1);
+    }
+
+    function _incrementTokenTypeId() private  {
+        _currentTokenID++;
+    }
+
 }

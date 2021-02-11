@@ -44,17 +44,36 @@ const App = () => {
     }
   };
 
-  const runExample = async () => {
-    const { accounts, contract } = this.state;
+  handleCreate = async (e) => {
+    e.preventDefault();
+    const { contract, accounts, web3 } = this.state;
 
-    // Stores a given value, 5 by default.
-    await contract.methods.set(5).send({ from: accounts[0] });
+    console.log(contract);
 
-    // Get the value from the contract to prove it worked.
-    const response = await contract.methods.get().call();
+    if (contract) {
+      console.log(
+        await contract.methods.create(accounts[0], 10000000000).send({
+          from: accounts[0],
+        })
+      );
+    }
+  };
 
-    // Update state with the result.
-    this.setState({ storageValue: response });
+  handleSend = async (e) => {
+    e.preventDefault();
+    const { contract, accounts } = this.state;
+
+    contract.methods
+      .safeTransferFrom(
+        accounts[0],
+        "0x81431b69B1e0E334d4161A13C2955e0f3599381e",
+        1,
+        10000,
+        Buffer.from("test")
+      )
+      .send({
+        from: accounts[0],
+      });
   };
 
   if (!this.state.web3) {
@@ -62,17 +81,9 @@ const App = () => {
   }
   return (
     <div className="App">
-      <h1>Good to Go!</h1>
-      <p>Your Truffle Box is installed and ready.</p>
-      <h2>Smart Contract Example</h2>
-      <p>
-        If your contracts compiled and migrated successfully, below will show a
-        stored value of 5 (by default).
-      </p>
-      <p>
-        Try changing the value stored on <strong>line 40</strong> of App.js.
-      </p>
-      <div>The stored value is: {this.state.storageValue}</div>
+      <button onClick={(e) => this.handleCreate(e)}>Create Token</button>
+
+      <button onClick={(e) => this.handleSend(e)}>Send</button>
     </div>
   );
 };
