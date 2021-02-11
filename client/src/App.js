@@ -29,7 +29,7 @@ class App extends Component {
 
       console.log(accounts[0])
 
-      console.log(instance.methods.balanceOf(accounts[0], 1).call())
+      console.log(await instance.methods.balanceOf(accounts[0], 1).call())
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
