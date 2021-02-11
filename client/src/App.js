@@ -5,7 +5,6 @@ import getWeb3 from "./getWeb3";
 import "./App.css";
 
 const App = () => {
-  const [storageValue, setStorageValue] = useState(0);
   const [web3, setWeb3] = useState(null);
   const [accounts, setAccounts] = useState();
   const [contract, setContract] = useState();
