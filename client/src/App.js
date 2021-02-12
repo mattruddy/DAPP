@@ -1,5 +1,5 @@
 import React, { Component, useEffect, useState } from "react";
-import AmericaContract from "./contracts/America.json";
+import PixelToken from "./contracts/PixelToken.json";
 import getWeb3 from "./getWeb3";
 
 import "./App.css";
@@ -23,9 +23,9 @@ const App = () => {
 
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
-      const deployedNetwork = AmericaContract.networks[networkId];
+      const deployedNetwork = PixelToken.networks[networkId];
       const instance = new web3.eth.Contract(
-        AmericaContract.abi,
+        PixelToken.abi,
         deployedNetwork && deployedNetwork.address
       );
 

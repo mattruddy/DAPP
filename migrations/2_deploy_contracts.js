@@ -1,5 +1,5 @@
-var America = artifacts.require("./America.sol")
+var PixelToken = artifacts.require("./PixelToken.sol")
 
 module.exports = function (deployer) {
-  deployer.deploy(America)
+  deployer.deploy(PixelToken)
 }
