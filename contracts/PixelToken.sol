@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 contract PixelToken is ERC1155 {
 
+    address payable owner;
+    uint256 transactionFee;
+
     struct Pixel {
         uint256 id;
         Meta meta;
@@ -12,10 +15,13 @@ contract PixelToken is ERC1155 {
 
     struct Meta {
         address account;
-        string name;
+        string hexColor;
+        uint256 x;
+        uint256 y;
     }
 
-    address proxyRegistryAddress;
+    event PixelTransaction(address _from, Meta data);
+
     uint256 private _currentTokenID = 0;
     mapping (uint256 => Meta) public creators;
 
@@ -29,35 +35,52 @@ contract PixelToken is ERC1155 {
         _;
     }
 
+    modifier isOwner() {
+        require(msg.sender == owner, "Creator Only");
+        _;
+    }
+
     constructor() public ERC1155("https://github.com/mattruddy/DAPP/blob/master/item/{id}.json") {
         name = "PixelToken";
         symbol = "PXT";
-        proxyRegistryAddress = msg.sender;
-
-        // create 100 pixel items
-        for (uint i=0; i<10; i++) {
-            _mint(msg.sender, i, 1, "");
-            Meta memory meta = Meta({
-                account: msg.sender,
-                name: "Test Name"
-            });
-            creators[i] = meta;
-            _incrementTokenTypeId();
-        }
+        owner = 0x16Fb96a5fa0427Af0C8F7cF1eB4870231c8154B6;
+        transactionFee = 1000000000000000000;
     }
 
-    function create(string calldata itemName) external returns(uint256) {
-        uint256 _id = _getNextTokenID();
-        _incrementTokenTypeId();
+    function changeOwner(address payable _owner) public isOwner {
+        owner = _owner;
+    }
 
+    function create(uint256 x, uint256 y, string calldata hexColor) external payable {
+        //require(msg.value == transactionFee, 'Value is not enough');
         Meta memory meta = Meta({
-            account: msg.sender,
-            name: itemName
+            account: msg.sender, 
+            hexColor: hexColor,
+            x: x,
+            y: y           
         });
-        creators[_id] = meta;
 
-        _mint(msg.sender, _id, 1, "");
-        return _id;
+        creators[_currentTokenID] = meta;
+
+        owner.transfer(msg.value);
+        _mint(msg.sender, _currentTokenID, 1, "");
+        emit PixelTransaction(msg.sender, meta);
+        _incrementTokenTypeId();
+    }
+
+    function send(address to, uint256 _id) external creatorOnly(_id) returns(Pixel[] memory){
+
+        Meta memory currentMeta = creators[_id];
+        Meta memory newMeta = Meta({
+            account: to,
+            hexColor: currentMeta.hexColor,
+            x: currentMeta.x,
+            y: currentMeta.y
+        });
+        creators[_id] = newMeta;
+
+        safeTransferFrom(msg.sender, to, _id, 1, "");
+        return getAllPixels();
     }
 
     function getAllPixels() public view returns(Pixel[] memory) {
@@ -69,10 +92,6 @@ contract PixelToken is ERC1155 {
             });
         }
         return pixels;
-    }
-
-    function _getNextTokenID() private view returns (uint256) {
-        return _currentTokenID.add(1);
     }
 
     function _incrementTokenTypeId() private  {

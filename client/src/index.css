@@ -11,3 +11,13 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.pixel {
+  height: 40px;
+  width: 40px;
+}
+
+.pixel:hover {
+  cursor: pointer;
+  border: 1px solid;
+}
