@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react"
 import PixelToken from "./contracts/PixelToken.json"
-import PixelBlock from "./component/PixelBlock"
 import getWeb3 from "./getWeb3"
 import stc from "string-to-color"
 import {
@@ -13,6 +12,9 @@ import {
 } from "reactstrap"
 
 import "./App.css"
+import { displayScreen } from "./utils/viewport"
+import * as PIXI from "pixi.js"
+import { viewport } from "./utils/index"
 
 const App = () => {
   const [web3, setWeb3] = useState(null)
@@ -25,23 +27,44 @@ const App = () => {
 
   useEffect(() => {
     start()
+    displayScreen()
+    return () => {
+      if (web3) {
+        web3.eth.unsubscribe((error, success) => {
+          if (success) {
+            console.log(success)
+          }
+        })
+      }
+    }
   }, [])
+
+  useEffect(() => {
+    viewport.on("clicked", async (el) => {
+      console.log(contract)
+      if (contract) {
+        await contract.methods
+          .create(Math.round(el.world.x), Math.round(el.world.y), "black")
+          .send({
+            from: accounts[0],
+            value: web3.utils.toWei(".01", "ether"),
+          })
+        fetchPixels(contract)
+      }
+    })
+  }, [contract])
+
+  const addPixel = (meta) => {
+    const sprite = viewport.addChild(new PIXI.Sprite(PIXI.Texture.WHITE))
+    sprite.tint = stc(meta.account).replace("#", "0x")
+    sprite.width = sprite.height = 10
+    sprite.position.set(meta.x, meta.y)
+  }
 
   const start = async () => {
     try {
       // Get network provider and web3 instance.
       const web3 = await getWeb3()
-      web3.eth.subscribe(
-        "logs",
-        { address: "0x93F3FF8fBA0386F84016DbCEBd7B922B3094c5C9" },
-        (error, result) => {
-          if (error) {
-            console.log(error)
-          } else {
-            console.log(result)
-          }
-        }
-      )
       // Use web3 to get the user's accounts.
       const accounts = await web3.eth.getAccounts()
 
@@ -52,6 +75,10 @@ const App = () => {
         PixelToken.abi,
         deployedNetwork && deployedNetwork.address
       )
+
+      web3.eth
+        .subscribe("logs", { address: instance.address }, (error, result) => {})
+        .on("data", (data) => {})
 
       setWeb3(web3)
       setAccounts(accounts)
@@ -69,17 +96,6 @@ const App = () => {
   const fetchPixels = async (instance) => {
     const p = await instance.methods.getAllPixels().call()
     setPixels(p)
-  }
-
-  const handleCreate = async (e) => {
-    e.preventDefault()
-    if (contract) {
-      await contract.methods.create(1, 1, "black").send({
-        from: accounts[0],
-        value: web3.utils.toWei(".01", "ether"),
-      })
-      fetchPixels(contract)
-    }
   }
 
   const toggle = () => setIsOpen(!isOpen)
@@ -113,8 +129,6 @@ const App = () => {
           />
         )}
       </div>
-      <button onClick={(e) => handleCreate(e)}>Create Pixel</button>
-      {/* <input onChange={(e) => setTo(e.target.value)} value={to} /> */}
       <ul>
         {pixels &&
           pixels.map((pixel, i) => (
@@ -126,7 +140,7 @@ const App = () => {
                 toggle()
               }}
             >
-              <PixelBlock pixel={pixel} />
+              {addPixel(pixel.meta)}
             </div>
           ))}
       </ul>

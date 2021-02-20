@@ -7,6 +7,8 @@ contract PixelToken is ERC1155 {
 
     address payable owner;
     uint256 transactionFee;
+    uint256 maxX;
+    uint256 maxY;
 
     struct Pixel {
         uint256 id;
@@ -24,6 +26,7 @@ contract PixelToken is ERC1155 {
 
     uint256 private _currentTokenID = 0;
     mapping (uint256 => Meta) public creators;
+    mapping (uint256 => uint256) xyCombos;
 
     // Contract name
     string public name;
@@ -44,15 +47,26 @@ contract PixelToken is ERC1155 {
         name = "PixelToken";
         symbol = "PXT";
         owner = 0x16Fb96a5fa0427Af0C8F7cF1eB4870231c8154B6;
+        maxX = 7000;
+        maxY = 4000;
         transactionFee = 1000000000000000000;
     }
 
+    // Admin
     function changeOwner(address payable _owner) public isOwner {
         owner = _owner;
     }
 
+    function changeFee(uint256 _amount) public isOwner {
+        transactionFee = _amount;
+    }
+
     function create(uint256 x, uint256 y, string calldata hexColor) external payable {
         //require(msg.value == transactionFee, 'Value is not enough');
+       // require(x >= 0 && x <= maxX, "X must be between 0 and 7000");
+       // require(y >= 0 && y <= maxY, "Y must be between 0 and 4000");
+        require(msg.sender.balance >= msg.value, "Not enough funds");
+
         Meta memory meta = Meta({
             account: msg.sender, 
             hexColor: hexColor,
@@ -69,7 +83,6 @@ contract PixelToken is ERC1155 {
     }
 
     function send(address to, uint256 _id) external creatorOnly(_id) returns(Pixel[] memory){
-
         Meta memory currentMeta = creators[_id];
         Meta memory newMeta = Meta({
             account: to,

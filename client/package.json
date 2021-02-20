@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "bootstrap": "^4.6.0",
+    "pixi-viewport": "^4.19.0",
+    "pixi.js": "^5.3.7",
     "react": "16.11.0",
     "react-dom": "16.11.0",
     "react-scripts": "3.2.0",
