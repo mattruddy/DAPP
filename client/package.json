@@ -4,9 +4,11 @@
   "private": true,
   "dependencies": {
     "bootstrap": "^4.6.0",
+    "hex-rgb": "^4.2.0",
     "pixi-viewport": "^4.19.0",
     "pixi.js": "^5.3.7",
     "react": "16.11.0",
+    "react-color": "^2.19.3",
     "react-dom": "16.11.0",
     "react-scripts": "3.2.0",
     "reactstrap": "^8.9.0",
