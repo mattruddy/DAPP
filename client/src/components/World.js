@@ -13,27 +13,28 @@ const World = ({ pixels, isEdit, onPixelsChange, currentColor }) => {
   const [selectedPixels, setSelectedPixels] = useState([]);
   const worldRef = useRef();
 
-  console.log(currentColor);
   const handleClicked = useCallback(
     (el) => {
       if (isEdit) {
-        // clicked and already selected pixel.
-        // const match = (s) => el.world.x === s.x && el.world.y === s.y;
-        // if (selectedPixels.some(match)) {
-        //   setSelectedPixels((curr) => curr.filter(match));
-        //   removePixel(selectedPixels.find(match));
-        // }
         const newPoint = {
           x: Math.floor(el.world.x),
           y: Math.floor(el.world.y),
-          color: currentColor.hex,
+          color: currentColor,
         };
-        setSelectedPixels((curr) => [...curr, newPoint]);
-        setCurrPixels((curr) => [...curr, newPoint]);
-        onPixelsChange && onPixelsChange({ el, currPixels, selectedPixels });
+        const match = (s) => newPoint.x === s.x && newPoint.y === s.y;
+        const notMatch = (s) => !match(s);
+        // clicked an already selected pixel?
+        if (selectedPixels.some(match)) {
+          setSelectedPixels((curr) => curr.filter(notMatch));
+          setCurrPixels((curr) => curr.filter(notMatch));
+        } else {
+          setSelectedPixels((curr) => [...curr, newPoint]);
+          setCurrPixels((curr) => [...curr, newPoint]);
+          onPixelsChange && onPixelsChange({ el, currPixels, selectedPixels });
+        }
       }
     },
-    [currentColor, isEdit, onPixelsChange]
+    [currentColor, isEdit, onPixelsChange, selectedPixels]
   );
 
   useEffect(() => {
@@ -55,6 +56,7 @@ const World = ({ pixels, isEdit, onPixelsChange, currentColor }) => {
       minWidth: 5,
     });
   }, []);
+
   useEffect(() => {
     updateWorld(currPixels);
   }, [currPixels]);
@@ -62,6 +64,8 @@ const World = ({ pixels, isEdit, onPixelsChange, currentColor }) => {
   useEffect(() => {
     if (!isEdit) {
       setCurrPixels(pixels);
+    } else {
+      setCurrPixels([...pixels, ...selectedPixels]);
     }
   }, [isEdit]);
 

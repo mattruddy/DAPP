@@ -24,6 +24,7 @@ const App = () => {
   const [sendId, setSendId] = useState();
   const [isOpen, setIsOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState("#eb4034");
+  const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
     start();
@@ -110,16 +111,14 @@ const App = () => {
         style={{
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           margin: "8px",
         }}
       >
-        <h5>My Pixel Color </h5>
-        {accounts && (
-          <div
-            className="pixel"
-            style={{ background: `${stc(accounts[0])}` }}
-          />
-        )}
+        <h5>Crypto Pixels</h5>
+        <Button onClick={() => setIsEdit(!isEdit)}>
+          {!isEdit ? "Buy" : "Cancel"}
+        </Button>
       </div>
       <div
         style={{
@@ -129,11 +128,13 @@ const App = () => {
           margin: "8px",
         }}
       >
-        <World pixels={pixels} isEdit={true} currentColor={currentColor} />
-        <SidePanel
-          color={currentColor}
-          onColorChange={(color) => setCurrentColor(color)}
-        />
+        <World pixels={pixels} isEdit={isEdit} currentColor={currentColor} />
+        {isEdit && (
+          <SidePanel
+            color={currentColor}
+            onColorChange={(color) => setCurrentColor(color.hex)}
+          />
+        )}
         {/* {pixels &&
           pixels.map((pixel, i) => (
             <div
