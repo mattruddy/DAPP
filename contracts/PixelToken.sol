@@ -15,6 +15,8 @@ contract PixelToken is ERC1155 {
     }
 
     struct Pixel {
+        address owner;
+        uint256 creatorId;
         bytes32 id;
         string hexColor;
         uint256 x;
@@ -27,9 +29,7 @@ contract PixelToken is ERC1155 {
     mapping (uint256 => Creator) public creators;
 
 
-    // Contract name
     string public name;
-    // Contract symbol
     string public symbol;
 
     modifier creatorOnly(uint256 _id) {
@@ -52,7 +52,7 @@ contract PixelToken is ERC1155 {
         return pixels;
     }
 
-    // Admin
+    // Owner Functionality
     function changeOwner(address payable _owner) public isOwner {
         owner = _owner;
     }
@@ -61,11 +61,8 @@ contract PixelToken is ERC1155 {
         transactionFee = _amount;
     }
 
-    // Public
+    // Public Functionality
     function create(Pixel[] memory _pixels) public payable {
-        //require(msg.value == transactionFee, 'Value is not enough');
-       // require(x >= 0 && x <= maxX, "X must be between 0 and 7000");
-       // require(y >= 0 && y <= maxY, "Y must be between 0 and 4000");
         require(msg.sender.balance >= msg.value, "Not enough funds");
 
         Creator memory creator = Creator({
@@ -77,20 +74,38 @@ contract PixelToken is ERC1155 {
         for (uint256 i = 0; i < _pixels.length; i++) {
             Pixel memory p = _pixels[i];
             p.id = getHashFromCords(p.x, p.y);
+            p.creatorId = _currentTokenID;
+            p.owner = msg.sender;
             creator.pixelIds[i] = p.id;
             pixels.push(p);
         }
 
         creators[_currentTokenID] = creator;
-        // for (uint256 i = 0; i < _pixels.length; i++) {
-
-        //     creator.pixels[i] = _pixels[i];
-        // }
-
-        // creators[_currentTokenID] = blk;
         owner.transfer(msg.value);
         _mint(msg.sender, _currentTokenID, 1, "");
         _incrementTokenTypeId();
+    }
+
+    function addPixels(uint256 _id, Pixel[] memory _pixels) creatorOnly(_id) public payable {
+        Creator memory c = creators[_id];
+
+        bytes32[] memory _pixelIds = new bytes32[](c.pixelIds.length + _pixels.length);
+
+        uint256 count = 0;
+        for (uint256 i = 0; i < c.pixelIds.length; i++) {
+            _pixelIds[i] = c.pixelIds[i];
+            count++;
+        }
+
+        for (uint256 i = 0; i <  _pixels.length; i++) {
+            Pixel memory p = _pixels[i];
+            p.id = getHashFromCords(p.x, p.y);
+            p.owner = msg.sender;
+            _pixelIds[count] = p.id;
+            pixels.push(p);
+        }
+
+        c.pixelIds = _pixelIds;
     }
 
     // function sellBlock(address to, uint256 _id) external creatorOnly(_id) returns(Pixel[] memory){
@@ -107,9 +122,6 @@ contract PixelToken is ERC1155 {
     //     return getAllPixels();
     // }
 
-    // function getAllPixels() public view returns(mapping (bytes32 => Pixel)) {
-    //     return pixels;
-    // }
 
     function _incrementTokenTypeId() private  {
         _currentTokenID++;
