@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import PixelToken from "./contracts/PixelToken.json";
 import getWeb3 from "./getWeb3";
-import stc from "string-to-color";
 import {
   Button,
   Input,
@@ -14,6 +13,8 @@ import {
 import "./App.css";
 import World from "./components/World";
 import SidePanel from "./components/SidePanel";
+import { useRecoilState } from "recoil";
+import { isEditState } from "./state";
 
 const App = () => {
   const [web3, setWeb3] = useState(null);
@@ -23,8 +24,7 @@ const App = () => {
   const [to, setTo] = useState();
   const [sendId, setSendId] = useState();
   const [isOpen, setIsOpen] = useState(false);
-  const [currentColor, setCurrentColor] = useState("#eb4034");
-  const [isEdit, setIsEdit] = useState(false);
+  const [isEdit, setIsEdit] = useRecoilState(isEditState);
 
   useEffect(() => {
     start();
@@ -123,18 +123,13 @@ const App = () => {
       <div
         style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "stretch",
           justifyContent: "center",
           margin: "8px",
         }}
       >
-        <World pixels={pixels} isEdit={isEdit} currentColor={currentColor} />
-        {isEdit && (
-          <SidePanel
-            color={currentColor}
-            onColorChange={(color) => setCurrentColor(color.hex)}
-          />
-        )}
+        <World pixels={pixels} />
+        {isEdit && <SidePanel />}
         {/* {pixels &&
           pixels.map((pixel, i) => (
             <div

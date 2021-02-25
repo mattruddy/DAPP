@@ -6,6 +6,7 @@ export const displayScreen = (el) => {
   el.appendChild(app.view);
   // add the viewport to the stage
   app.stage.addChild(viewport);
+  app.renderer.backgroundColor = 0xeeeeee;
   // activate plugins
   viewport.drag().pinch().wheel().decelerate().fitWorld();
 };

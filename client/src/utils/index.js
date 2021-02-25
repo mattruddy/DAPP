@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import { Viewport } from "pixi-viewport";
 PIXI.settings.ROUND_PIXELS = true;
 export const app = new PIXI.Application();
-export const SIZE = 100;
+export const SIZE = 10;
 
 export const viewport = new Viewport({
   worldWidth: SIZE,

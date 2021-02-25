@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { currentColorState, isEditState, selectedPixelsState } from "../state";
 
 import { SIZE, viewport } from "../utils/index";
-import {
-  displayScreen,
-  addPixel,
-  removePixel,
-  updateWorld,
-} from "../utils/viewport";
+import { displayScreen, updateWorld } from "../utils/viewport";
 
-const World = ({ pixels, isEdit, onPixelsChange, currentColor }) => {
+const World = ({ pixels, onPixelsChange }) => {
   const [currPixels, setCurrPixels] = useState(pixels);
-  const [selectedPixels, setSelectedPixels] = useState([]);
+  const [selectedPixels, setSelectedPixels] = useRecoilState(
+    selectedPixelsState
+  );
+  const currentColor = useRecoilValue(currentColorState);
   const worldRef = useRef();
+  const isEdit = useRecoilValue(isEditState);
 
   const handleClicked = useCallback(
     (el) => {
@@ -21,15 +22,16 @@ const World = ({ pixels, isEdit, onPixelsChange, currentColor }) => {
           y: Math.floor(el.world.y),
           color: currentColor,
         };
+        let selected;
         const match = (s) => newPoint.x === s.x && newPoint.y === s.y;
         const notMatch = (s) => !match(s);
         // clicked an already selected pixel?
         if (selectedPixels.some(match)) {
-          setSelectedPixels((curr) => curr.filter(notMatch));
-          setCurrPixels((curr) => curr.filter(notMatch));
+          selected = selectedPixels.filter(notMatch);
+          setSelectedPixels(selected);
         } else {
-          setSelectedPixels((curr) => [...curr, newPoint]);
-          setCurrPixels((curr) => [...curr, newPoint]);
+          selected = [...selectedPixels, newPoint];
+          setSelectedPixels(selected);
           onPixelsChange && onPixelsChange({ el, currPixels, selectedPixels });
         }
       }
@@ -55,6 +57,7 @@ const World = ({ pixels, isEdit, onPixelsChange, currentColor }) => {
       minHeight: 5,
       minWidth: 5,
     });
+    viewport.fit();
   }, []);
 
   useEffect(() => {
@@ -69,8 +72,21 @@ const World = ({ pixels, isEdit, onPixelsChange, currentColor }) => {
     }
   }, [isEdit]);
 
+  useEffect(() => {
+    if (isEdit) {
+      setCurrPixels([...pixels, ...selectedPixels]);
+    }
+  }, [selectedPixels]);
+
   return (
-    <div style={{ padding: "16px" }} ref={worldRef} className="world"></div>
+    <div
+      style={{
+        padding: "16px",
+        border: "1px solid black",
+      }}
+      ref={worldRef}
+      className="world"
+    ></div>
   );
 };
 
