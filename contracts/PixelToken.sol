@@ -78,6 +78,7 @@ contract PixelToken is ERC1155 {
             Pixel memory p = _pixels[i];
             p.id = getHashFromCords(p.x, p.y);
             creator.pixelIds[i] = p.id;
+            pixels.push(p);
         }
 
         creators[_currentTokenID] = creator;

@@ -13,8 +13,8 @@ import {
 import "./App.css";
 import World from "./components/World";
 import SidePanel from "./components/SidePanel";
-import { useRecoilState } from "recoil";
-import { isEditState } from "./state";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { isEditState, selectedPixelsState } from "./state";
 
 const App = () => {
   const [web3, setWeb3] = useState(null);
@@ -25,6 +25,7 @@ const App = () => {
   const [sendId, setSendId] = useState();
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useRecoilState(isEditState);
+  const setSelectedPixels = useSetRecoilState(selectedPixelsState);
 
   useEffect(() => {
     start();
@@ -88,7 +89,13 @@ const App = () => {
   const fetchPixels = async (instance) => {
     const p = await instance.methods.getPixels().call();
     console.log("p", p);
-    setPixels(p);
+    setPixels(
+      p.map(({ x, y, hexColor }) => ({
+        x: parseInt(x),
+        y: parseInt(y),
+        color: hexColor,
+      }))
+    );
   };
 
   const toggle = () => setIsOpen(!isOpen);
@@ -114,6 +121,8 @@ const App = () => {
         from: accounts[0],
         value: web3.utils.toWei(".01", "ether"),
       });
+      setSelectedPixels([]);
+      setIsEdit(false);
       fetchPixels(contract);
     }
   };

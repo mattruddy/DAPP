@@ -14,6 +14,8 @@ const World = ({ pixels, onPixelsChange }) => {
   const worldRef = useRef();
   const isEdit = useRecoilValue(isEditState);
 
+  console.log(pixels);
+
   const handleClicked = useCallback(
     (el) => {
       if (isEdit) {
@@ -77,6 +79,10 @@ const World = ({ pixels, onPixelsChange }) => {
       setCurrPixels([...pixels, ...selectedPixels]);
     }
   }, [selectedPixels]);
+
+  useEffect(() => {
+    setCurrPixels(pixels);
+  }, [pixels]);
 
   return (
     <div
