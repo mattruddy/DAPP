@@ -58,6 +58,7 @@ export default () => {
         <Button style={{ padding: "8px" }} onClick={() => toggleClearModal()}>
           Clear
         </Button>
+        <Button style={{ padding: "8px" }}>Check out</Button>
       </div>
       <Modal isOpen={showClearModal} toggle={() => toggleClearModal()}>
         <ModalBody>Are you sure you want to clear?</ModalBody>

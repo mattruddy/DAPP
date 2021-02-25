@@ -18,7 +18,7 @@ export const updateWorld = (pixels) => {
   for (var yPlace = 0; yPlace < SIZE; yPlace++) {
     for (var xPlace = 0; xPlace < SIZE; xPlace++) {
       var pos = (yPlace * SIZE + xPlace) * 4; // position in buffer based on x and y
-      const pixel = pixels.find((p) => p.x == xPlace && p.y == yPlace);
+      const pixel = pixels.find((p) => p.x === xPlace && p.y === yPlace);
       let rgbColor = pixel
         ? hexRgb(pixel.color, { format: "array" })
         : [255, 255, 255, 255];
