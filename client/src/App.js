@@ -2,14 +2,6 @@ import React, { useCallback, useEffect, useState } from "react"
 import PixelToken from "./contracts/PixelToken.json"
 import getWeb3 from "./getWeb3"
 import stc from "string-to-color"
-import {
-  Button,
-  Input,
-  InputGroup,
-  Modal,
-  ModalBody,
-  ModalHeader,
-} from "reactstrap"
 
 import "./App.css"
 import { displayScreen } from "./utils/viewport"
@@ -21,6 +13,7 @@ const App = () => {
   const [accounts, setAccounts] = useState()
   const [contract, setContract] = useState()
   const [pixels, setPixels] = useState([])
+  const [myPixels, setMyPixels] = useState([])
   const [to, setTo] = useState()
   const [sendId, setSendId] = useState()
   const [isOpen, setIsOpen] = useState(false)
@@ -32,7 +25,6 @@ const App = () => {
       if (web3) {
         web3.eth.unsubscribe((error, success) => {
           if (success) {
-            console.log(success)
           }
         })
       }
@@ -41,7 +33,9 @@ const App = () => {
 
   useEffect(() => {
     viewport.on("clicked", async (el) => {
-      console.log(contract)
+      const x = Math.round(el.world.x)
+      const y = Math.round(el.world.y)
+      console.log(`x: ${x}, y: ${y}`)
       if (contract) {
         await contract.methods
           .create(Math.round(el.world.x), Math.round(el.world.y), "black")
@@ -49,7 +43,7 @@ const App = () => {
             from: accounts[0],
             value: web3.utils.toWei(".01", "ether"),
           })
-        fetchPixels(contract)
+        fetchPixels(contract, accounts)
       }
     })
   }, [contract])
@@ -57,7 +51,7 @@ const App = () => {
   const addPixel = (meta) => {
     const sprite = viewport.addChild(new PIXI.Sprite(PIXI.Texture.WHITE))
     sprite.tint = stc(meta.account).replace("#", "0x")
-    sprite.width = sprite.height = 10
+    sprite.width = sprite.height = 1
     sprite.position.set(meta.x, meta.y)
   }
 
@@ -83,7 +77,7 @@ const App = () => {
       setWeb3(web3)
       setAccounts(accounts)
       setContract(instance)
-      fetchPixels(instance)
+      fetchPixels(instance, accounts)
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -93,10 +87,18 @@ const App = () => {
     }
   }
 
-  const fetchPixels = async (instance) => {
+  const fetchPixels = async (instance, acc) => {
     const p = await instance.methods.getAllPixels().call()
     setPixels(p)
+    setMyPixels(p.filter((pixel) => pixel.meta.account == acc[0]))
   }
+
+  useEffect(() => {
+    if (myPixels && myPixels.length > 0 && viewport) {
+      viewport.moveCorner(myPixels[0].meta.x, myPixels[0].meta.y)
+      console.log("here")
+    }
+  }, [myPixels, viewport])
 
   const toggle = () => setIsOpen(!isOpen)
 
@@ -105,7 +107,7 @@ const App = () => {
       await contract.methods.send(to, sendId).send({
         from: accounts[0],
       })
-      fetchPixels(contract)
+      fetchPixels(contract, accounts)
     }
   }, [accounts, to, contract])
 
@@ -129,50 +131,19 @@ const App = () => {
           />
         )}
       </div>
-      <ul>
-        {pixels &&
-          pixels.map((pixel, i) => (
-            <div
-              key={i}
-              onClick={(e) => {
-                e.preventDefault()
-                setSendId(pixel.id)
-                toggle()
-              }}
-            >
-              {addPixel(pixel.meta)}
-            </div>
-          ))}
-      </ul>
-      <Modal isOpen={isOpen}>
-        <ModalHeader>Send Pixel?</ModalHeader>
-        <ModalBody>
-          <InputGroup>
-            <Input onChange={(e) => setTo(e.target.value)} value={to} />
-          </InputGroup>
-          <InputGroup>
-            <Button
-              onClick={(e) => {
-                e.preventDefault()
-                handleSend()
-              }}
-            >
-              Send
-            </Button>
-          </InputGroup>
-          <InputGroup>
-            <Button
-              onClick={(e) => {
-                e.preventDefault()
-                setSendId(undefined)
-                toggle()
-              }}
-            >
-              Close
-            </Button>
-          </InputGroup>
-        </ModalBody>
-      </Modal>
+      {pixels &&
+        pixels.map((pixel, i) => (
+          <div
+            key={i}
+            onClick={(e) => {
+              e.preventDefault()
+              setSendId(pixel.id)
+              toggle()
+            }}
+          >
+            {addPixel(pixel.meta)}
+          </div>
+        ))}
     </div>
   )
 }

@@ -7,26 +7,25 @@ contract PixelToken is ERC1155 {
 
     address payable owner;
     uint256 transactionFee;
-    uint256 maxX;
-    uint256 maxY;
 
-    struct Pixel {
+    struct Creator {
         uint256 id;
-        Meta meta;
+        address owner;
+        bytes32[] pixelIds;
     }
 
-    struct Meta {
-        address account;
+    struct Pixel {
+        bytes32 id;
         string hexColor;
         uint256 x;
         uint256 y;
     }
 
-    event PixelTransaction(address _from, Meta data);
+    Pixel[] public pixels;
 
     uint256 private _currentTokenID = 0;
-    mapping (uint256 => Meta) public creators;
-    mapping (uint256 => uint256) xyCombos;
+    mapping (uint256 => Creator) public creators;
+
 
     // Contract name
     string public name;
@@ -34,12 +33,12 @@ contract PixelToken is ERC1155 {
     string public symbol;
 
     modifier creatorOnly(uint256 _id) {
-        require(creators[_id].account == msg.sender, "Creator Only");
+        require(creators[_id].owner == msg.sender, "Creator Only");
         _;
     }
 
     modifier isOwner() {
-        require(msg.sender == owner, "Creator Only");
+        require(msg.sender == owner, "Owner Only");
         _;
     }
 
@@ -47,9 +46,6 @@ contract PixelToken is ERC1155 {
         name = "PixelToken";
         symbol = "PXT";
         owner = 0x16Fb96a5fa0427Af0C8F7cF1eB4870231c8154B6;
-        maxX = 7000;
-        maxY = 4000;
-        transactionFee = 1000000000000000000;
     }
 
     // Admin
@@ -61,53 +57,60 @@ contract PixelToken is ERC1155 {
         transactionFee = _amount;
     }
 
-    function create(uint256 x, uint256 y, string calldata hexColor) external payable {
+    // Public
+    function create(Pixel[] memory _pixels) public payable {
         //require(msg.value == transactionFee, 'Value is not enough');
        // require(x >= 0 && x <= maxX, "X must be between 0 and 7000");
        // require(y >= 0 && y <= maxY, "Y must be between 0 and 4000");
         require(msg.sender.balance >= msg.value, "Not enough funds");
 
-        Meta memory meta = Meta({
-            account: msg.sender, 
-            hexColor: hexColor,
-            x: x,
-            y: y           
+        Creator memory creator = Creator({
+            id: _currentTokenID,
+            owner: msg.sender,
+            pixelIds: new bytes32[](_pixels.length)
         });
 
-        creators[_currentTokenID] = meta;
+        for (uint256 i = 0; i < _pixels.length; i++) {
+            Pixel memory p = _pixels[i];
+            p.id = getHashFromCords(p.x, p.y);
+            creator.pixelIds[i] = p.id;
+        }
 
+        creators[_currentTokenID] = creator;
+        // for (uint256 i = 0; i < _pixels.length; i++) {
+
+        //     creator.pixels[i] = _pixels[i];
+        // }
+
+        // creators[_currentTokenID] = blk;
         owner.transfer(msg.value);
         _mint(msg.sender, _currentTokenID, 1, "");
-        emit PixelTransaction(msg.sender, meta);
         _incrementTokenTypeId();
     }
 
-    function send(address to, uint256 _id) external creatorOnly(_id) returns(Pixel[] memory){
-        Meta memory currentMeta = creators[_id];
-        Meta memory newMeta = Meta({
-            account: to,
-            hexColor: currentMeta.hexColor,
-            x: currentMeta.x,
-            y: currentMeta.y
-        });
-        creators[_id] = newMeta;
+    // function sellBlock(address to, uint256 _id) external creatorOnly(_id) returns(Pixel[] memory){
+    //     Meta memory currentMeta = blocks[_id];
+    //     Meta memory newMeta = Meta({
+    //         account: to,
+    //         hexColor: currentMeta.hexColor,
+    //         x: currentMeta.x,
+    //         y: currentMeta.y
+    //     });
+    //     blocks[_id] = newMeta;
 
-        safeTransferFrom(msg.sender, to, _id, 1, "");
-        return getAllPixels();
-    }
+    //     safeTransferFrom(msg.sender, to, _id, 1, "");
+    //     return getAllPixels();
+    // }
 
-    function getAllPixels() public view returns(Pixel[] memory) {
-        Pixel[] memory pixels = new Pixel[](_currentTokenID);
-        for(uint i =0; i < _currentTokenID; i++) {
-            pixels[i] = Pixel({
-                id: i,
-                meta: creators[i]
-            });
-        }
-        return pixels;
-    }
+    // function getAllPixels() public view returns(mapping (bytes32 => Pixel)) {
+    //     return pixels;
+    // }
 
     function _incrementTokenTypeId() private  {
         _currentTokenID++;
     }
+
+    function getHashFromCords(uint256 x, uint256 y) internal pure returns (bytes32) {
+        return sha256(abi.encodePacked(x, y));
+   }
 }
