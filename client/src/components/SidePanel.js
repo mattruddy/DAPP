@@ -4,7 +4,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import { currentColorState, selectedPixelsState } from "../state";
 import { Button, Modal, ModalFooter, ModalBody } from "reactstrap";
 
-export default () => {
+export default ({ onCheckout }) => {
   const [selectedPixels, setSelectedPixels] = useRecoilState(
     selectedPixelsState
   );
@@ -58,7 +58,12 @@ export default () => {
         <Button style={{ padding: "8px" }} onClick={() => toggleClearModal()}>
           Clear
         </Button>
-        <Button style={{ padding: "8px" }}>Check out</Button>
+        <Button
+          style={{ padding: "8px" }}
+          onClick={() => onCheckout(selectedPixels)}
+        >
+          Check out
+        </Button>
       </div>
       <Modal isOpen={showClearModal} toggle={() => toggleClearModal()}>
         <ModalBody>Are you sure you want to clear?</ModalBody>

@@ -48,6 +48,10 @@ contract PixelToken is ERC1155 {
         owner = 0x16Fb96a5fa0427Af0C8F7cF1eB4870231c8154B6;
     }
 
+    function getPixels() public returns(Pixel[] memory) {
+        return pixels;
+    }
+
     // Admin
     function changeOwner(address payable _owner) public isOwner {
         owner = _owner;
