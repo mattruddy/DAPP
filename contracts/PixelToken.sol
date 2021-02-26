@@ -5,12 +5,9 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 contract PixelToken is ERC1155 {
 
-    address payable owner;
-    uint256 transactionFee;
-
     struct Creator {
         uint256 id;
-        address owner;
+        address payable owner;
         bytes32[] pixelIds;
     }
 
@@ -23,17 +20,28 @@ contract PixelToken is ERC1155 {
         uint256 y;
     }
 
-    Pixel[] public pixels;
-
-    uint256 private _currentTokenID = 0;
-    mapping (uint256 => Creator) public creators;
-
+    struct Bid {
+        address fromAddress;
+        uint256 amount;
+    }
 
     string public name;
     string public symbol;
+    address payable owner;
+    uint256 public pixelFee;
+    Pixel[] public pixels;
+    uint256 private _currentTokenID = 0;
+    mapping (uint256 => Creator) creators;
+    mapping (uint256 => Bid[]) bids;
 
+    // Modifiers
     modifier creatorOnly(uint256 _id) {
         require(creators[_id].owner == msg.sender, "Creator Only");
+        _;
+    }
+
+    modifier notCreator(uint256 _id) {
+        require(creators[_id].owner != msg.sender, "Cannot be Creator");
         _;
     }
 
@@ -50,15 +58,6 @@ contract PixelToken is ERC1155 {
 
     function getPixels() public returns(Pixel[] memory) {
         return pixels;
-    }
-
-    // Owner Functionality
-    function changeOwner(address payable _owner) public isOwner {
-        owner = _owner;
-    }
-
-    function changeFee(uint256 _amount) public isOwner {
-        transactionFee = _amount;
     }
 
     // Public Functionality
@@ -108,20 +107,16 @@ contract PixelToken is ERC1155 {
         c.pixelIds = _pixelIds;
     }
 
-    // function sellBlock(address to, uint256 _id) external creatorOnly(_id) returns(Pixel[] memory){
-    //     Meta memory currentMeta = blocks[_id];
-    //     Meta memory newMeta = Meta({
-    //         account: to,
-    //         hexColor: currentMeta.hexColor,
-    //         x: currentMeta.x,
-    //         y: currentMeta.y
-    //     });
-    //     blocks[_id] = newMeta;
+    function placeBid(uint256 _id) notCreator(_id) public payable {
+        bids[_id].push(Bid({
+            fromAddress: msg.sender,
+            amount: msg.value
+        }));
+    }
 
-    //     safeTransferFrom(msg.sender, to, _id, 1, "");
-    //     return getAllPixels();
-    // }
-
+    function getBids() public returns(Bid[] memory) {
+        return bids[0];
+    }
 
     function _incrementTokenTypeId() private  {
         _currentTokenID++;
@@ -130,4 +125,13 @@ contract PixelToken is ERC1155 {
     function getHashFromCords(uint256 x, uint256 y) internal pure returns (bytes32) {
         return sha256(abi.encodePacked(x, y));
    }
+
+       // Owner Functionality
+    function changeOwner(address payable _owner) public isOwner {
+        owner = _owner;
+    }
+
+    function changeFee(uint256 _amount) public isOwner {
+        pixelFee = _amount;
+    }
 }
