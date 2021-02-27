@@ -1,4 +1,4 @@
-const path = require("path")
+const path = require("path");
 
 module.exports = {
   compilers: {
@@ -8,10 +8,13 @@ module.exports = {
   },
   // See <http://truffleframework.com/docs/advanced/configuration>
   // to customize your Truffle configuration!
-  contracts_build_directory: path.join(__dirname, "client/src/contracts"),
+  contracts_build_directory: path.join(
+    __dirname,
+    "../crypto-canvas-fe/contracts"
+  ),
   networks: {
     develop: {
       port: 8545,
     },
   },
-}
+};
