@@ -114,8 +114,8 @@ contract PixelToken is ERC1155 {
         }));
     }
 
-    function getBids() public returns(Bid[] memory) {
-        return bids[0];
+    function getBids(uint256 _id) public returns(Bid[] memory) {
+        return bids[_id];
     }
 
     function _incrementTokenTypeId() private  {
