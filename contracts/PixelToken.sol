@@ -63,7 +63,7 @@ contract PixelToken is ERC1155, ChainlinkClient {
     //     request.add("get", "http://localhost:3000/api/test/hello");
     // }
 
-    function getPixels() public returns(Pixel[] memory) {
+    function getPixels() public view returns(Pixel[] memory) {
         return pixels;
     }
 
@@ -116,7 +116,7 @@ contract PixelToken is ERC1155, ChainlinkClient {
         creators[_id] = c;
     }
 
-    function getBid(uint256 _id) public returns(Bid memory) {
+    function getBid(uint256 _id) public view returns(Bid memory) {
         return highestBid[_id];
     }
 
