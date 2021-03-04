@@ -113,7 +113,13 @@ contract PixelToken is ERC1155, ChainlinkClient {
         c.owner.transfer(highestBid[_id].amount);
         safeTransferFrom(c.owner, highestBid[_id].fromAddress, _id, 1, "");
         c.owner = highestBid[_id].fromAddress;
-        creators[_id] = c;
+
+        Creator memory newCreator = Creator({
+            id: c.id,
+            owner: highestBid[_id].fromAddress,
+            pixelIds: c.pixelIds
+        });
+        creators[_id] = newCreator;
     }
 
     function getBid(uint256 _id) public view returns(Bid memory) {
