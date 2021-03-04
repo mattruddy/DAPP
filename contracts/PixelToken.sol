@@ -2,8 +2,9 @@ pragma solidity 0.6.2;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
 
-contract PixelToken is ERC1155 {
+contract PixelToken is ERC1155, ChainlinkClient {
 
     struct Creator {
         uint256 id;
@@ -21,7 +22,7 @@ contract PixelToken is ERC1155 {
     }
 
     struct Bid {
-        address fromAddress;
+        address payable fromAddress;
         uint256 amount;
     }
 
@@ -32,7 +33,8 @@ contract PixelToken is ERC1155 {
     Pixel[] public pixels;
     uint256 private _currentTokenID = 0;
     mapping (uint256 => Creator) creators;
-    mapping (uint256 => Bid[]) bids;
+    mapping (uint256 => Bid) highestBid;
+    mapping (uint256 => Bid[]) bidHistory;
 
     // Modifiers
     modifier creatorOnly(uint256 _id) {
@@ -55,6 +57,11 @@ contract PixelToken is ERC1155 {
         symbol = "PXT";
         owner = 0x16Fb96a5fa0427Af0C8F7cF1eB4870231c8154B6;
     }
+
+    // function test() {
+    //     Chainlink.Request memory request = buildChainlinkRequest(1, address(this));
+    //     request.add("get", "http://localhost:3000/api/test/hello");
+    // }
 
     function getPixels() public returns(Pixel[] memory) {
         return pixels;
@@ -85,37 +92,32 @@ contract PixelToken is ERC1155 {
         _incrementTokenTypeId();
     }
 
-    function addPixels(uint256 _id, Pixel[] memory _pixels) creatorOnly(_id) public payable {
-        Creator memory c = creators[_id];
-
-        bytes32[] memory _pixelIds = new bytes32[](c.pixelIds.length + _pixels.length);
-
-        uint256 count = 0;
-        for (uint256 i = 0; i < c.pixelIds.length; i++) {
-            _pixelIds[i] = c.pixelIds[i];
-            count++;
-        }
-
-        for (uint256 i = 0; i <  _pixels.length; i++) {
-            Pixel memory p = _pixels[i];
-            p.id = getHashFromCords(p.x, p.y);
-            p.owner = msg.sender;
-            _pixelIds[count] = p.id;
-            pixels.push(p);
-        }
-
-        c.pixelIds = _pixelIds;
-    }
-
     function placeBid(uint256 _id) notCreator(_id) public payable {
-        bids[_id].push(Bid({
-            fromAddress: msg.sender,
-            amount: msg.value
-        }));
+        Bid memory prevHighest = highestBid[_id];
+        require(msg.value > prevHighest.amount);
+
+        if (prevHighest.fromAddress != address(0)) {
+            prevHighest.fromAddress.transfer(prevHighest.amount);
+            bidHistory[_id].push(prevHighest);
+        }
+
+        Bid memory newHighestBidder = Bid({
+            amount: msg.value,
+            fromAddress: msg.sender
+        });
+        highestBid[_id] = newHighestBidder;
     }
 
-    function getBids() public returns(Bid[] memory) {
-        return bids[0];
+    function acceptBid(uint256 _id) creatorOnly(_id) public payable {
+        Creator memory c = creators[_id];
+        c.owner.transfer(highestBid[_id].amount);
+        safeTransferFrom(c.owner, highestBid[_id].fromAddress, _id, 1, "");
+        c.owner = highestBid[_id].fromAddress;
+        creators[_id] = c;
+    }
+
+    function getBid(uint256 _id) public returns(Bid memory) {
+        return highestBid[_id];
     }
 
     function _incrementTokenTypeId() private  {
