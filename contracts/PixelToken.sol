@@ -9,6 +9,7 @@ contract PixelToken is ERC1155, ChainlinkClient {
     struct Creator {
         uint256 id;
         address payable owner;
+        bytes32[] pixelIds;
     }
 
     struct Pixel {
@@ -35,12 +36,11 @@ contract PixelToken is ERC1155, ChainlinkClient {
     string public name;
     string public symbol;
     address payable owner;
-    uint256 public pixelFee;
-    uint256 private _currentTokenID = 0;
+    uint256 private _currentTokenID;
     uint256 private _pixelcount;
-
+    mapping (bytes32 => Pixel) pixelMap;
+    mapping (bytes32 => uint256) pixelCreator;
     mapping (uint256 => Creator) creators;
-    mapping (uint256 => Pixel[]) creatorPixels;
     mapping (uint256 => Bid) highestBid;
     mapping (uint256 => Bid[]) bidHistory;
 
@@ -75,17 +75,17 @@ contract PixelToken is ERC1155, ChainlinkClient {
         PixelResponse[] memory _pixels = new PixelResponse[](_pixelcount);
         uint256 count = 0;
         for (uint256 i = 0; i <= _currentTokenID; i++) {
-            Pixel[] memory p = creatorPixels[i];
             Creator memory creator = creators[i];
-            for (uint256 j = 0; j < p.length; j++) {
-                Pixel memory c = p[j];
+            bytes32[] memory pixelIds = creator.pixelIds;
+            for (uint256 j = 0; j < pixelIds.length; j++) {
+                Pixel memory _pixel = pixelMap[pixelIds[j]];
                 PixelResponse memory resp = PixelResponse({
                     blockId: i,
                     owner: creator.owner,
-                    pixelId: c.id,
-                    hexColor: c.hexColor,
-                    x: c.x,
-                    y: c.y
+                    pixelId: _pixel.id,
+                    hexColor: _pixel.hexColor,
+                    x: _pixel.x,
+                    y: _pixel.y
                 });
                 _pixels[count] = resp;
                 count++;
@@ -100,19 +100,31 @@ contract PixelToken is ERC1155, ChainlinkClient {
 
         Creator memory creator = Creator({
             id: _currentTokenID,
-            owner: msg.sender
+            owner: msg.sender,
+            pixelIds: new bytes32[](_pixels.length)
         });
         for (uint256 i = 0; i < _pixels.length; i++) {
             Pixel memory p = _pixels[i];
             p.id = getHashFromCords(p.x, p.y);
-            creatorPixels[_currentTokenID].push(p);
-            _pixelcount++;
+            creator.pixelIds[i] = p.id;
+            pixelMap[p.id] = p;
+            pixelCreator[p.id] = _currentTokenID;
         }
 
         creators[_currentTokenID] = creator;
         owner.transfer(msg.value);
         _mint(msg.sender, _currentTokenID, 1, "");
         _incrementTokenTypeId();
+    }
+
+    function changePixels(uint256 _id, Pixel[] memory _pixels) public creatorOnly(_id) {
+        for (uint256 i = 0; i < _pixels.length; i++) {
+            Pixel memory _pixel = _pixels[i];
+            require(pixelCreator[_pixel.id] == _id);
+            Pixel memory map = pixelMap[_pixel.id];
+            map.hexColor = _pixel.hexColor;
+            pixelMap[_pixel.id] = map;
+        }
     }
 
     function placeBid(uint256 _id) notCreator(_id) public payable {
@@ -154,9 +166,5 @@ contract PixelToken is ERC1155, ChainlinkClient {
        // Owner Functionality
     function changeOwner(address payable _owner) public isOwner {
         owner = _owner;
-    }
-
-    function changeFee(uint256 _amount) public isOwner {
-        pixelFee = _amount;
     }
 }
