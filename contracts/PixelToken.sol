@@ -9,13 +9,19 @@ contract PixelToken is ERC1155, ChainlinkClient {
     struct Creator {
         uint256 id;
         address payable owner;
-        bytes32[] pixelIds;
     }
 
     struct Pixel {
-        address owner;
-        uint256 creatorId;
         bytes32 id;
+        string hexColor;
+        uint256 x;
+        uint256 y;
+    }
+
+    struct PixelResponse {
+        uint256 blockId;
+        address owner;
+        bytes32 pixelId;
         string hexColor;
         uint256 x;
         uint256 y;
@@ -30,9 +36,11 @@ contract PixelToken is ERC1155, ChainlinkClient {
     string public symbol;
     address payable owner;
     uint256 public pixelFee;
-    Pixel[] public pixels;
     uint256 private _currentTokenID = 0;
+    uint256 private _pixelcount;
+
     mapping (uint256 => Creator) creators;
+    mapping (uint256 => Pixel[]) creatorPixels;
     mapping (uint256 => Bid) highestBid;
     mapping (uint256 => Bid[]) bidHistory;
 
@@ -63,8 +71,27 @@ contract PixelToken is ERC1155, ChainlinkClient {
     //     request.add("get", "http://localhost:3000/api/test/hello");
     // }
 
-    function getPixels() public view returns(Pixel[] memory) {
-        return pixels;
+    function getPixels() public view returns(PixelResponse[] memory) {
+        PixelResponse[] memory _pixels = new PixelResponse[](_pixelcount);
+        uint256 count = 0;
+        for (uint256 i = 0; i <= _currentTokenID; i++) {
+            Pixel[] memory p = creatorPixels[i];
+            Creator memory creator = creators[i];
+            for (uint256 j = 0; j < p.length; j++) {
+                Pixel memory c = p[j];
+                PixelResponse memory resp = PixelResponse({
+                    blockId: i,
+                    owner: creator.owner,
+                    pixelId: c.id,
+                    hexColor: c.hexColor,
+                    x: c.x,
+                    y: c.y
+                });
+                _pixels[count] = resp;
+                count++;
+            }
+        }
+        return _pixels;
     }
 
     // Public Functionality
@@ -73,17 +100,13 @@ contract PixelToken is ERC1155, ChainlinkClient {
 
         Creator memory creator = Creator({
             id: _currentTokenID,
-            owner: msg.sender,
-            pixelIds: new bytes32[](_pixels.length)
+            owner: msg.sender
         });
-
         for (uint256 i = 0; i < _pixels.length; i++) {
             Pixel memory p = _pixels[i];
             p.id = getHashFromCords(p.x, p.y);
-            p.creatorId = _currentTokenID;
-            p.owner = msg.sender;
-            creator.pixelIds[i] = p.id;
-            pixels.push(p);
+            creatorPixels[_currentTokenID].push(p);
+            _pixelcount++;
         }
 
         creators[_currentTokenID] = creator;
@@ -111,7 +134,7 @@ contract PixelToken is ERC1155, ChainlinkClient {
     function acceptBid(uint256 _id) creatorOnly(_id) public payable {
         Creator memory c = creators[_id];
         c.owner.transfer(highestBid[_id].amount);
-        require(_safeTransferFrom(c.owner, highestBid[_id].fromAddress, _id, 1, ""), "issue with transfer");
+        safeTransferFrom(c.owner, highestBid[_id].fromAddress, _id, 1, "");
         c.owner = highestBid[_id].fromAddress;
         creators[_id] = c;
     }
