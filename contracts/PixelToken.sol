@@ -58,7 +58,7 @@ contract PixelToken is ERC1155 {
         _;
     }
 
-    constructor() public ERC1155("https://github.com/mattruddy/DAPP/blob/master/item/{id}.json") {
+    constructor() ERC1155("https://github.com/mattruddy/DAPP/blob/master/item/{id}.json") {
         name = "PixelToken";
         symbol = "PXT";
         owner = 0x16Fb96a5fa0427Af0C8F7cF1eB4870231c8154B6;
