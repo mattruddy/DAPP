@@ -1,4 +1,4 @@
-pragma solidity 0.6.2;
+pragma solidity 0.7.4;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
@@ -82,7 +82,6 @@ contract PixelToken is ERC1155 {
         return _pixels;
     }
 
-    // Public Functionality
     function create(Pixel[] memory _pixels) public payable {
         require(msg.sender.balance >= msg.value, "Not enough funds");
 
