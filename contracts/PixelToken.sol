@@ -35,6 +35,7 @@ contract PixelToken is ERC1155 {
     string public symbol;
     address payable owner;
     uint256 private _currentTokenID;
+
     bytes32[] pixelIds;
     mapping (bytes32 => Pixel) public pixelMap;
     mapping (bytes32 => uint256) public pixelCreator;
@@ -42,7 +43,6 @@ contract PixelToken is ERC1155 {
     mapping (uint256 => Bid) highestBid;
     mapping (uint256 => Bid[]) bidHistory;
 
-    // Modifiers
     modifier creatorOnly(uint256 _id) {
         require(creators[_id].owner == msg.sender, "Creator Only");
         _;
@@ -135,6 +135,9 @@ contract PixelToken is ERC1155 {
         safeTransferFrom(c.owner, highestBid[_id].fromAddress, _id, 1, "");
         c.owner = highestBid[_id].fromAddress;
         creators[_id] = c;
+
+        bidHistory[_id].push(highestBid[_id]);
+        delete highestBid[_id];
     }
 
     function getBid(uint256 _id) public view returns(Bid memory) {
@@ -149,7 +152,6 @@ contract PixelToken is ERC1155 {
         return sha256(abi.encodePacked(x, y));
    }
 
-       // Owner Functionality
     function changeOwner(address payable _owner) public isOwner {
         owner = _owner;
     }
