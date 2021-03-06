@@ -70,7 +70,7 @@ contract PixelToken is ERC1155 {
             Pixel memory _pixel = pixelMap[pixelIds[i]];
             Creator memory creator = creators[pixelCreator[_pixel.id]];
             PixelResponse memory resp = PixelResponse({
-                blockId: i,
+                blockId: creator.id,
                 owner: creator.owner,
                 pixelId: _pixel.id,
                 hexColor: _pixel.hexColor,
