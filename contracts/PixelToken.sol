@@ -2,9 +2,8 @@ pragma solidity 0.6.2;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
 
-contract PixelToken is ERC1155, ChainlinkClient {
+contract PixelToken is ERC1155 {
 
     struct Creator {
         uint256 id;
@@ -67,7 +66,7 @@ contract PixelToken is ERC1155, ChainlinkClient {
 
     function getPixels() public view returns(PixelResponse[] memory) {
         PixelResponse[] memory _pixels = new PixelResponse[](pixelIds.length);
-        for (uint256 i = 0; i <= _pixels.length; i++) {
+        for (uint256 i = 0; i < _pixels.length; i++) {
             Pixel memory _pixel = pixelMap[pixelIds[i]];
             Creator memory creator = creators[pixelCreator[_pixel.id]];
             PixelResponse memory resp = PixelResponse({
