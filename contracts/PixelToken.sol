@@ -1,11 +1,11 @@
 pragma solidity 0.7.4;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract PixelToken is ERC1155 {
+contract PixelToken is ERC721 {
 
-    struct Creator {
+    struct Exhibit {
         uint256 id;
         address payable owner;
     }
@@ -18,7 +18,7 @@ contract PixelToken is ERC1155 {
     }
 
     struct PixelResponse {
-        uint256 blockId;
+        uint256 exhibitId;
         address owner;
         bytes32 pixelId;
         string hexColor;
@@ -31,25 +31,25 @@ contract PixelToken is ERC1155 {
         uint256 amount;
     }
 
-    string public name;
-    string public symbol;
     address payable owner;
     uint256 private _currentTokenID;
-
     bytes32[] pixelIds;
     mapping (bytes32 => Pixel) public pixelMap;
-    mapping (bytes32 => uint256) public pixelCreator;
-    mapping (uint256 => Creator) creators;
+    mapping (bytes32 => uint256) public pixelExhibit;
+    mapping (bytes32 => Exhibit) exhibitHash; 
+    mapping (uint256 => Exhibit) exhibits;
     mapping (uint256 => Bid) highestBid;
     mapping (uint256 => Bid[]) bidHistory;
 
+    event PixelsChanged(Pixel[] _pixels);
+
     modifier creatorOnly(uint256 _id) {
-        require(creators[_id].owner == msg.sender, "Creator Only");
+        require(exhibits[_id].owner == msg.sender, "Creator Only");
         _;
     }
 
     modifier notCreator(uint256 _id) {
-        require(creators[_id].owner != msg.sender, "Cannot be Creator");
+        require(exhibits[_id].owner != msg.sender, "Cannot be Creator");
         _;
     }
 
@@ -58,9 +58,7 @@ contract PixelToken is ERC1155 {
         _;
     }
 
-    constructor() ERC1155("https://github.com/mattruddy/DAPP/blob/master/item/{id}.json") {
-        name = "PixelToken";
-        symbol = "PXT";
+    constructor() ERC721("PixelToken", "PXT") {
         owner = 0x16Fb96a5fa0427Af0C8F7cF1eB4870231c8154B6;
     }
 
@@ -68,9 +66,9 @@ contract PixelToken is ERC1155 {
         PixelResponse[] memory _pixels = new PixelResponse[](pixelIds.length);
         for (uint256 i = 0; i < _pixels.length; i++) {
             Pixel memory _pixel = pixelMap[pixelIds[i]];
-            Creator memory creator = creators[pixelCreator[_pixel.id]];
+            Exhibit memory creator = exhibits[pixelExhibit[_pixel.id]];
             PixelResponse memory resp = PixelResponse({
-                blockId: creator.id,
+                exhibitId: creator.id,
                 owner: creator.owner,
                 pixelId: _pixel.id,
                 hexColor: _pixel.hexColor,
@@ -89,28 +87,29 @@ contract PixelToken is ERC1155 {
             Pixel memory p = _pixels[i];
             p.id = getHashFromCords(p.x, p.y);
             pixelMap[p.id] = p;
-            pixelCreator[p.id] = _currentTokenID;
+            pixelExhibit[p.id] = _currentTokenID;
             pixelIds.push(p.id);
         }
 
-        Creator memory creator = Creator({
+        Exhibit memory creator = Exhibit({
             id: _currentTokenID,
             owner: msg.sender
         });
-        creators[_currentTokenID] = creator;
+        exhibits[_currentTokenID] = creator;
         owner.transfer(msg.value);
-        _mint(msg.sender, _currentTokenID, 1, "");
+        _mint(msg.sender, _currentTokenID);
         _incrementTokenTypeId();
     }
 
     function changePixels(uint256 _id, Pixel[] memory _pixels) public creatorOnly(_id) {
         for (uint256 i = 0; i < _pixels.length; i++) {
             Pixel memory _pixel = _pixels[i];
-            require(pixelCreator[_pixel.id] == _id);
+            require(pixelExhibit[_pixel.id] == _id);
             Pixel memory map = pixelMap[_pixel.id];
             map.hexColor = _pixel.hexColor;
             pixelMap[_pixel.id] = map;
-        }
+        } 
+        emit PixelsChanged(_pixels);
     }
 
     function placeBid(uint256 _id) notCreator(_id) public payable {
@@ -130,11 +129,11 @@ contract PixelToken is ERC1155 {
     }
 
     function acceptBid(uint256 _id) creatorOnly(_id) public payable {
-        Creator memory c = creators[_id];
+        Exhibit memory c = exhibits[_id];
         c.owner.transfer(highestBid[_id].amount);
-        safeTransferFrom(c.owner, highestBid[_id].fromAddress, _id, 1, "");
+        safeTransferFrom(c.owner, highestBid[_id].fromAddress, _id);
         c.owner = highestBid[_id].fromAddress;
-        creators[_id] = c;
+        exhibits[_id] = c;
 
         bidHistory[_id].push(highestBid[_id]);
         delete highestBid[_id];

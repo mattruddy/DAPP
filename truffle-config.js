@@ -1,4 +1,5 @@
-const path = require("path");
+const path = require("path")
+const HDWalletProvider = require("@truffle/hdwallet-provider")
 
 module.exports = {
   compilers: {
@@ -16,5 +17,15 @@ module.exports = {
     develop: {
       port: 8545,
     },
+    ropsten: {
+      provider: () => {
+        return new HDWalletProvider(
+          "deputy broom lawsuit hire destroy demise pelican inhale shrimp scene bitter rib",
+          "https://ropsten.infura.io/v3/a660dd20b24f4b389873f0b1aee68eb4",
+          1
+        )
+      },
+      network_id: 3,
+    },
   },
-};
+}
