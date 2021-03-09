@@ -66,11 +66,14 @@ contract PixelToken is ERC721 {
         _;
     }
 
-    constructor() ERC721("PixelToken", "PXT") {
-        owner = 0x4606Ac07453a0eFa44cf5C9e17b17D909d1688D2;
-        maxXPixel = 9;
-        maxYPixel = 9;
-        maxPixelsPerExhibit = 6;
+    constructor(address payable _owner, uint256 _maxX, 
+                uint256 _maxY, uint256 _maxPixelsPerExhibit, 
+                uint256 _fee) ERC721("PixelToken", "PXT") {
+        owner = _owner;
+        maxXPixel = _maxX;
+        maxYPixel = _maxY;
+        maxPixelsPerExhibit = _maxPixelsPerExhibit;
+        pixelFee = _fee;
     }
 
     function getPixels() public view returns(PixelResponse[] memory) {
