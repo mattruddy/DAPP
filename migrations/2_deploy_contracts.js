@@ -3,10 +3,9 @@ var PixelToken = artifacts.require("./PixelToken.sol")
 module.exports = function (deployer) {
   deployer.deploy(
     PixelToken,
-    0x4606ac07453a0efa44cf5c9e17b17d909d1688d2,
+    "0x4606Ac07453a0eFa44cf5C9e17b17D909d1688D2",
     9,
-    9,
-    6,
-    0.001
+    6000,
+    100000
   )
 }

@@ -24,7 +24,7 @@ contract PixelToken is ERC721 {
 
     struct HighestBidResponse {
         uint256 exhibitId;
-        address payable fromAddress;
+        address fromAddress;
         uint256 amount;
     }
 
@@ -37,8 +37,8 @@ contract PixelToken is ERC721 {
         uint256 y;
     }
 
-    address payable public owner;
-    uint256 pixelFee;
+    address payable owner;
+    uint256 public pixelFee;
     uint256 private _currentTokenID;
     bytes32[] pixelIds;
     mapping (bytes32 => Pixel) public pixelMap;
@@ -50,6 +50,8 @@ contract PixelToken is ERC721 {
     uint256 public maxXPixel;
     uint256 public maxYPixel;
     uint256 public maxPixelsPerExhibit;
+
+    mapping (bytes32 => bool) tempPixelMap;
 
     modifier exhibitCreatorOnly(uint256 _id) {
         require(exhibits[_id].owner == msg.sender, "Creator Only");
@@ -66,14 +68,13 @@ contract PixelToken is ERC721 {
         _;
     }
 
-    constructor(address payable _owner, uint256 _maxX, 
-                uint256 _maxY, uint256 _maxPixelsPerExhibit, 
-                uint256 _fee) ERC721("PixelToken", "PXT") {
+    constructor(address payable _owner, uint256 _maxCoords, 
+                uint256 _maxPixels, uint256 _pixelfee) ERC721("PixelToken", "PXT") {
         owner = _owner;
-        maxXPixel = _maxX;
-        maxYPixel = _maxY;
-        maxPixelsPerExhibit = _maxPixelsPerExhibit;
-        pixelFee = _fee;
+        maxXPixel = _maxCoords;
+        maxYPixel = _maxCoords;
+        maxPixelsPerExhibit = _maxPixels;
+        pixelFee = _pixelfee;
     }
 
     function getPixels() public view returns(PixelResponse[] memory) {
@@ -97,11 +98,12 @@ contract PixelToken is ERC721 {
     function create(Pixel[] memory _pixels) public payable {
         require(msg.sender.balance >= msg.value, "Not enough funds");
         require(_pixels.length <= maxPixelsPerExhibit, "Too many pixels");
-
+        require(checkIsRect(_pixels), "Invalid rectangle");
         for (uint256 i = 0; i < _pixels.length; i++) {
             Pixel memory p = _pixels[i];
             require(p.x <= maxXPixel && p.y <= maxYPixel, "Coordinates are out of bounce");
             p.id = getHashFromCords(p.x, p.y);
+            delete tempPixelMap[p.id];
             pixelMap[p.id] = p;
             pixelExhibit[p.id] = _currentTokenID;
             pixelIds.push(p.id);
@@ -129,6 +131,7 @@ contract PixelToken is ERC721 {
 
     function placeBid(uint256 _id) notExhibitCreator(_id) public payable {
         Bid memory prevHighest = highestBid[_id];
+        require(msg.sender.balance >= msg.value);
         require(msg.value > 0 && msg.value > prevHighest.amount);
 
         if (prevHighest.fromAddress != address(0)) {
@@ -149,7 +152,6 @@ contract PixelToken is ERC721 {
         safeTransferFrom(c.owner, highestBid[_id].fromAddress, _id);
         c.owner = highestBid[_id].fromAddress;
         exhibits[_id] = c;
-
         bidHistory[_id].push(highestBid[_id]);
         delete highestBid[_id];
     }
@@ -184,6 +186,40 @@ contract PixelToken is ERC721 {
         return sha256(abi.encodePacked(x, y));
    }
 
+   function checkIsRect(Pixel[] memory _pixels) internal returns(bool) {
+        uint256 xMax = 0;
+        uint256 yMax = 0;
+        uint256 xMin = maxXPixel;
+        uint256 yMin = maxYPixel;
+        
+        for (uint256 i = 0; i < _pixels.length; i++) {
+            Pixel memory _pixel = _pixels[i];
+            if (_pixel.x > xMax) {
+                xMax = _pixel.x;
+            }
+            if (_pixel.y > yMax) {
+                yMax = _pixel.y;
+            }
+            if (_pixel.x < xMin) {
+                xMin = _pixel.x;
+            }
+            if (_pixel.y < yMin) {
+                yMin = _pixel.y;
+            }
+            bytes32 _id = getHashFromCords(_pixel.x, _pixel.y);
+            if (!tempPixelMap[_id]) {
+                tempPixelMap[_id] = true;
+            } else {
+                return false;
+            }
+        }
+        if (_pixels.length < (xMax - xMin + 1) * (yMax - yMin + 1)) {
+            return false;
+        }
+        return true;
+   }
+
+
     // Admin
     function changeContactOwner(address payable _owner) public isContractOwner {
         owner = _owner;
@@ -197,5 +233,9 @@ contract PixelToken is ERC721 {
 
     function changePixelFee(uint256 _pixelFee) public isContractOwner {
         pixelFee = _pixelFee;
+    }
+
+    function changeMaxPixelsPerExhibit(uint256 _max) public isContractOwner {
+        maxPixelsPerExhibit = _max;
     }
 }

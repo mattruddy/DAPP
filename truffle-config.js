@@ -21,11 +21,21 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           "deputy broom lawsuit hire destroy demise pelican inhale shrimp scene bitter rib",
-          "https://ropsten.infura.io/v3/a660dd20b24f4b389873f0b1aee68eb4",
+          "https://ropsten.infura.io/v3/60420780afe54f0c9916f68730909f78",
           1
         )
       },
-      network_id: 3,
+      network_id: "3",
+    },
+    rinkeby: {
+      provider: () => {
+        return new HDWalletProvider(
+          "deputy broom lawsuit hire destroy demise pelican inhale shrimp scene bitter rib",
+          "https://rinkeby.infura.io/v3/60420780afe54f0c9916f68730909f78",
+          1
+        )
+      },
+      network_id: "4",
     },
   },
 }
