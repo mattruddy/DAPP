@@ -1,3 +1,5 @@
 node_modules/
 client/src/contracts/
 crypto-canvas-fe
+.DS_Store
+contracts/.DS_Store
