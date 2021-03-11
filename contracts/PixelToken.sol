@@ -43,14 +43,13 @@ contract PixelToken is ERC721 {
     bytes32[] pixelIds;
     mapping (bytes32 => Pixel) public pixelMap;
     mapping (bytes32 => uint256) public pixelExhibit;
-    mapping (bytes32 => Exhibit) exhibitHash; 
     mapping (uint256 => Exhibit) exhibits;
     mapping (uint256 => Bid) highestBid;
     mapping (uint256 => Bid[]) bidHistory;
     uint256 public maxXPixel;
     uint256 public maxYPixel;
     uint256 public maxPixelsPerExhibit;
-
+    
     mapping (bytes32 => bool) tempPixelMap;
 
     modifier exhibitCreatorOnly(uint256 _id) {
@@ -98,11 +97,14 @@ contract PixelToken is ERC721 {
     function create(Pixel[] memory _pixels) public payable {
         require(msg.sender.balance >= msg.value, "Not enough funds");
         require(_pixels.length <= maxPixelsPerExhibit, "Too many pixels");
-        require(checkIsRect(_pixels), "Invalid rectangle");
+        require(isFullRect(_pixels), "Invalid rectangle");
         for (uint256 i = 0; i < _pixels.length; i++) {
             Pixel memory p = _pixels[i];
             require(p.x <= maxXPixel && p.y <= maxYPixel, "Coordinates are out of bounce");
             p.id = getHashFromCords(p.x, p.y);
+            require(pixelMap[p.id].id == 0, "Pixel already taken");
+            // Remove from tempPixelMap as it is only
+            // used for full rect validation
             delete tempPixelMap[p.id];
             pixelMap[p.id] = p;
             pixelExhibit[p.id] = _currentTokenID;
@@ -160,6 +162,10 @@ contract PixelToken is ERC721 {
         return highestBid[_id];
     }
 
+    function getBidHistoryForExhibit(uint256 _id) public view returns(Bid[] memory) {
+        return bidHistory[_id];
+    }
+
     function getAllHighestBids() public view returns(HighestBidResponse[] memory) {
         HighestBidResponse[] memory highestBids = new HighestBidResponse[](_currentTokenID);
         uint256 index = 0;
@@ -186,7 +192,7 @@ contract PixelToken is ERC721 {
         return sha256(abi.encodePacked(x, y));
    }
 
-   function checkIsRect(Pixel[] memory _pixels) internal returns(bool) {
+   function isFullRect(Pixel[] memory _pixels) internal returns(bool) {
         uint256 xMax = 0;
         uint256 yMax = 0;
         uint256 xMin = maxXPixel;
@@ -233,6 +239,7 @@ contract PixelToken is ERC721 {
 
     function changePixelFee(uint256 _pixelFee) public isContractOwner {
         pixelFee = _pixelFee;
+        // $0.50 / pixel; Use chainlink to update pixelFee as the price of ETH changes
     }
 
     function changeMaxPixelsPerExhibit(uint256 _max) public isContractOwner {
