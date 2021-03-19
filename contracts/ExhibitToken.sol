@@ -1,9 +1,11 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.7.4;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract PixelToken is ERC721 {
+contract ExhibitToken is ERC721 {
+
     struct Bounds {
         Coord topLeft;
         Coord bottomRight;
@@ -12,17 +14,6 @@ contract PixelToken is ERC721 {
     struct Coord {
         uint16 x;
         uint16 y;
-    }
-
-    struct Bid {
-        address payable fromAddress;
-        uint256 amount;
-    }
-
-    struct HighestBidResponse {
-        uint16 exhibitId;
-        address fromAddress;
-        uint256 amount;
     }
 
     struct ExhibitResp {
@@ -38,11 +29,10 @@ contract PixelToken is ERC721 {
     uint16 public maxYPixel;
     uint16 public maxPixelsPerExhibit;
     uint16 private _currentTokenID;
-    mapping (uint16 => Bid) highestBid;
-    mapping (uint16 => Bid[]) bidHistory;
     mapping (uint16 => Bounds) bounds;
     mapping (uint16 => uint8[]) rgbArray;
     uint16[] allBounds;
+    address public auctionAddress;
 
     modifier exhibitCreatorOnly(uint16 _id) {
         require(ownerOf(_id) == msg.sender, "Creator Only");
@@ -81,12 +71,13 @@ contract PixelToken is ERC721 {
     }
 
     constructor(address payable _owner, uint16 _maxCoords, 
-                uint16 _maxPixels, uint16 _pixelfee) ERC721("Exhibit", "XBT") {
+                uint16 _maxPixels, uint16 _pixelfee, address _auctionAddress) ERC721("Exhibit", "XBT") {
         owner = _owner;
         maxXPixel = _maxCoords;
         maxYPixel = _maxCoords;
         maxPixelsPerExhibit = _maxPixels;
         pixelFee = _pixelfee;
+        auctionAddress = _auctionAddress;
     }
 
     function getPixels() public view returns(ExhibitResp[] memory) {
@@ -110,7 +101,6 @@ contract PixelToken is ERC721 {
                 isInBounds(_bounds)
                 isPixelsValid(_pixels)
                 isOnCanvas(_bounds) {
-        
         require(msg.sender.balance >= msg.value, "Not enough funds");
         bounds[_currentTokenID] = _bounds;
         rgbArray[_currentTokenID] = _pixels;
@@ -125,64 +115,11 @@ contract PixelToken is ERC721 {
 
     function changePixels(uint16 _id, uint8[] memory _rgbArray) public exhibitCreatorOnly(_id) {
         rgbArray[_id] = _rgbArray;
-        Bid memory _highestBid = highestBid[_id];
-        if (_highestBid.fromAddress != address(0)) {
-            _highestBid.fromAddress.transfer(_highestBid.amount);
-            bidHistory[_id].push(_highestBid);
-        }
-        delete highestBid[_id];
     }
 
-    function placeBid(uint16 _id) notExhibitCreator(_id) public payable {
-        Bid memory prevHighest = highestBid[_id];
-        require(msg.sender.balance >= msg.value);
-        require(msg.value > 0 && msg.value > prevHighest.amount);
-
-        if (prevHighest.fromAddress != address(0)) {
-            prevHighest.fromAddress.transfer(prevHighest.amount);
-            bidHistory[_id].push(prevHighest);
-        }
-
-        Bid memory newHighestBidder = Bid({
-            amount: msg.value,
-            fromAddress: msg.sender
-        });
-        highestBid[_id] = newHighestBidder;
-    }
-
-    function acceptBid(uint16 _id) exhibitCreatorOnly(_id) public payable {
-        address payable _prevOwner = payable(ownerOf(_id));
-        Bid memory _highestBid = highestBid[_id];
-        _prevOwner.transfer(_highestBid.amount);
-        safeTransferFrom(_prevOwner, _highestBid.fromAddress, _id);
-        bidHistory[_id].push(_highestBid);
-        delete highestBid[_id];
-    }
- 
-    function getBid(uint16 _id) public view returns(Bid memory) {
-        return highestBid[_id];
-    }
-
-    function getBidHistoryForExhibit(uint16 _id) public view returns(Bid[] memory) {
-        return bidHistory[_id];
-    }
-
-    function getAllHighestBids() public view returns(HighestBidResponse[] memory) {
-        HighestBidResponse[] memory highestBids = new HighestBidResponse[](_currentTokenID);
-        uint16 index = 0;
-        for (uint16 i = 0; i < _currentTokenID; i++) {
-            if (highestBid[i].amount != 0) {
-                Bid memory _bid = highestBid[i];
-                HighestBidResponse memory resp = HighestBidResponse({
-                    exhibitId: i,
-                    fromAddress: _bid.fromAddress,
-                    amount: _bid.amount
-                });
-                highestBids[index] = resp;
-                index++;
-            }
-        }
-        return highestBids;
+    function startAuction(uint16 _id, uint16 _startPrice) public exhibitCreatorOnly(_id) {
+        require(auctionAddress != address(0), "Auction Contract not Set");
+        safeTransferFrom(msg.sender, auctionAddress, _id);
     }
 
     // Helpers
