@@ -39,11 +39,6 @@ contract ExhibitToken is ERC721 {
         _;
     }
 
-    modifier notExhibitCreator(uint16 _id) {
-        require(ownerOf(_id) != msg.sender, "Cannot be Creator");
-        _;
-    }
-
     modifier isContractOwner() {
         require(msg.sender == owner, "Owner Only");
         _;
@@ -115,11 +110,6 @@ contract ExhibitToken is ERC721 {
 
     function changePixels(uint16 _id, uint8[] memory _rgbArray) public exhibitCreatorOnly(_id) {
         rgbArray[_id] = _rgbArray;
-    }
-
-    function startAuction(uint16 _id, uint16 _startPrice) public exhibitCreatorOnly(_id) {
-        require(auctionAddress != address(0), "Auction Contract not Set");
-        safeTransferFrom(msg.sender, auctionAddress, _id);
     }
 
     // Helpers
