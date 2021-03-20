@@ -21,7 +21,7 @@ contract DARToken is ERC721, Ownable {
     uint16 public maxPixelsPerExhibit;
     uint16 public fee;
     mapping (uint16 => uint8[]) rgbArray;
-    mapping (uint16 => CustomStructs.Dimentions) dartDimention;
+    mapping (uint16 => CustomStructs.Dimensions) dartDimension;
 
     constructor(address payable _owner, uint16 _fee, address _proxyRegistryAddress) ERC721("DecentralizedArt", "DRT") {
         contractOwner = _owner;
@@ -33,34 +33,41 @@ contract DARToken is ERC721, Ownable {
         CustomStructs.DartResp[] memory _darts = new CustomStructs.DartResp[](_currentTokenID);
         for (uint16 i = 0; i < _currentTokenID; i++) {
             uint8[] memory _rgbArray = rgbArray[i];
-            CustomStructs.Dimentions memory _dimentions = dartDimention[i];
+            CustomStructs.Dimensions memory _dimensions = dartDimension[i];
             CustomStructs.DartResp memory resp = CustomStructs.DartResp({
                 dartId: i,
                 owner: ownerOf(i),
                 rgbArray: _rgbArray,
-                dimentions: _dimentions
+                dimensions: _dimensions
             });
              _darts[i] = resp;
         }
         return _darts;
     }
 
-    function create(uint8[] memory _pixels, 
-            CustomStructs.Dimentions memory _dimentions) 
-                    public payable 
-                    isValidLength(uint16((_pixels.length / 3)), _dimentions) 
-                    isPixelsValid(_pixels) { 
-                             
+    function getDart(uint16 _tokenId) public view returns(CustomStructs.DartResp memory) {
+        return CustomStructs.DartResp({
+            dartId: _tokenId,
+            owner: ownerOf(_tokenId),
+            rgbArray: rgbArray[_tokenId],
+            dimensions: dartDimension[_tokenId]
+        });
+    }
+
+    function createDart(uint8[] memory _pixels, CustomStructs.Dimensions memory _dimensions) public payable 
+                                                                    isValidLength(uint16((_pixels.length / 3)), _dimensions) 
+                                                                    isPixelsValid(_pixels) { 
+
         require(msg.sender.balance >= msg.value, "Not enough funds");
         rgbArray[_currentTokenID] = _pixels;
-        dartDimention[_currentTokenID] = _dimentions;
+        dartDimension[_currentTokenID] = _dimensions;
         contractOwner.transfer(msg.value);
         _mint(msg.sender, _currentTokenID);
-        _incrementTokenTypeId();
+        _incrementTokenId();
     }
 
     // Helpers
-    function _incrementTokenTypeId() internal {
+    function _incrementTokenId() internal {
         _currentTokenID++;
     }
 
@@ -82,8 +89,8 @@ contract DARToken is ERC721, Ownable {
         _;
     }
 
-    modifier isValidLength(uint256 length, CustomStructs.Dimentions memory _dimentions) {
-        require(RectMath.validLength(length, _dimentions), "Invalid pixel dimentions");
+    modifier isValidLength(uint256 length, CustomStructs.Dimensions memory _dimensions) {
+        require(RectMath.validLength(length, _dimensions), "Invalid pixel dimensions");
         _;
     }
 
