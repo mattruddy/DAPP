@@ -25,19 +25,7 @@ contract ExhibitToken is ERC721 {
     }
 
     function getPixels() public view returns(ExhibitStructs.ExhibitResp[] memory) {
-        ExhibitStructs.ExhibitResp[] memory _exhibit = new ExhibitStructs.ExhibitResp[](_currentTokenID);
-        for (uint16 i = 0; i < _currentTokenID; i++) {
-            uint8[] memory _rgbArray = rgbArray[i];
-            ExhibitStructs.Bounds memory _bounds = bounds[i];
-            ExhibitStructs.ExhibitResp memory resp = ExhibitStructs.ExhibitResp({
-                exhibitId: i,
-                owner: ownerOf(i),
-                rgbArray: _rgbArray,
-                bounds: _bounds
-            });
-             _exhibit[i] = resp;
-        }
-        return _exhibit;
+        return pixelConverter();
     }
 
     function create(uint8[] memory _pixels, ExhibitStructs.Bounds memory _bounds) public payable 
@@ -58,10 +46,6 @@ contract ExhibitToken is ERC721 {
         _incrementTokenTypeId();
     }
 
-    function changePixels(uint16 _id, uint8[] memory _rgbArray) public exhibitCreatorOnly(_id) {
-        rgbArray[_id] = _rgbArray;
-    }
-
     // Helpers
 
     function _incrementTokenTypeId() internal {
@@ -70,6 +54,22 @@ contract ExhibitToken is ERC721 {
 
     function getHashFromCords(uint16 x, uint16 y) internal pure returns (bytes32) {
         return sha256(abi.encodePacked(x, y));
+   }
+
+   function pixelConverter() internal view returns (ExhibitStructs.ExhibitResp[] memory) {
+        ExhibitStructs.ExhibitResp[] memory _exhibit = new ExhibitStructs.ExhibitResp[](_currentTokenID);
+        for (uint16 i = 0; i < _currentTokenID; i++) {
+            uint8[] memory _rgbArray = rgbArray[i];
+            ExhibitStructs.Bounds memory _bounds = bounds[i];
+            ExhibitStructs.ExhibitResp memory resp = ExhibitStructs.ExhibitResp({
+                exhibitId: i,
+                owner: ownerOf(i),
+                rgbArray: _rgbArray,
+                bounds: _bounds
+            });
+             _exhibit[i] = resp;
+        }
+        return _exhibit;
    }
 
     // Admin
