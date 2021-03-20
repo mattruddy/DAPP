@@ -4,12 +4,12 @@ pragma solidity 0.7.4;
 library CustomStructs {
 
     struct Dimensions {
-        uint16 height;
-        uint16 width;
+        uint256 height;
+        uint256 width;
     }
 
     struct DartResp {
-        uint16 dartId;
+        uint256 dartId;
         address owner;
         uint8[] rgbArray;
         Dimensions dimensions;

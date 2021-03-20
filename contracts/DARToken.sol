@@ -17,13 +17,13 @@ contract DARToken is ERC721, Ownable {
 
     address payable contractOwner;
     address proxyRegistryAddress;
-    uint16 private _currentTokenID;
-    uint16 public maxPixelsPerExhibit;
-    uint16 public fee;
-    mapping (uint16 => uint8[]) rgbArray;
-    mapping (uint16 => CustomStructs.Dimensions) dartDimension;
+    uint256 private _currentTokenID;
+    uint256 public maxPixelsPerExhibit;
+    uint256 public fee;
+    mapping (uint256 => uint8[]) rgbArray;
+    mapping (uint256 => CustomStructs.Dimensions) dartDimension;
 
-    constructor(address payable _owner, uint16 _fee, address _proxyRegistryAddress) ERC721("DecentralizedArt", "DRT") {
+    constructor(address payable _owner, uint256 _fee, address _proxyRegistryAddress) ERC721("DecentralizedArt", "DRT") {
         contractOwner = _owner;
         fee = _fee;
         proxyRegistryAddress = _proxyRegistryAddress;
@@ -45,7 +45,7 @@ contract DARToken is ERC721, Ownable {
         return _darts;
     }
 
-    function getDart(uint16 _tokenId) public view returns(CustomStructs.DartResp memory) {
+    function getDart(uint256 _tokenId) public view returns(CustomStructs.DartResp memory) {
         return CustomStructs.DartResp({
             dartId: _tokenId,
             owner: ownerOf(_tokenId),
@@ -55,7 +55,7 @@ contract DARToken is ERC721, Ownable {
     }
 
     function createDart(uint8[] memory _pixels, CustomStructs.Dimensions memory _dimensions) public payable 
-                                                                    isValidLength(uint16((_pixels.length / 3)), _dimensions) 
+                                                                    isValidLength(uint256((_pixels.length / 4)), _dimensions) 
                                                                     isPixelsValid(_pixels) { 
 
         require(msg.sender.balance >= msg.value, "Not enough funds");
@@ -71,7 +71,7 @@ contract DARToken is ERC721, Ownable {
         _currentTokenID++;
     }
 
-    function getHashFromCords(uint16 x, uint16 y) internal pure returns (bytes32) {
+    function getHashFromCords(uint256 x, uint256 y) internal pure returns (bytes32) {
         return sha256(abi.encodePacked(x, y));
    }
 
@@ -95,7 +95,7 @@ contract DARToken is ERC721, Ownable {
     }
 
     modifier isPixelsValid(uint8[] memory _pixels) {
-        require(_pixels.length <= maxPixelsPerExhibit * 3, "Too many pixels");
+        require(_pixels.length <= maxPixelsPerExhibit * 4, "Too many pixels");
         _;
     }
 
