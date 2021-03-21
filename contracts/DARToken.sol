@@ -6,12 +6,7 @@ import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { RectMath } from "./utils/RectMath.sol";
 import { CustomStructs } from "./utils/CustomStructs.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-
-contract OwnableDelegateProxy {}
-
-contract ProxyRegistry {
-    mapping(address => OwnableDelegateProxy) public proxies;
-}
+import { ProxyRegistry } from "./ProxyRegistry.sol";
 
 contract DARToken is ERC721, Ownable {
 
