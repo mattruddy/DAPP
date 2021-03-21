@@ -22,7 +22,7 @@ module.exports = {
         return new HDWalletProvider(
           "deputy broom lawsuit hire destroy demise pelican inhale shrimp scene bitter rib",
           "https://ropsten.infura.io/v3/60420780afe54f0c9916f68730909f78",
-          1
+          0
         )
       },
       network_id: "3",
@@ -32,7 +32,7 @@ module.exports = {
         return new HDWalletProvider(
           "deputy broom lawsuit hire destroy demise pelican inhale shrimp scene bitter rib",
           "https://rinkeby.infura.io/v3/60420780afe54f0c9916f68730909f78",
-          1
+          0
         )
       },
       network_id: "4",

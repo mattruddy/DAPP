@@ -20,8 +20,7 @@ contract DARToken is ERC721, Ownable {
     uint256 private _currentTokenID;
     uint256 public maxPixelsPerExhibit;
     uint256 public fee;
-    mapping (uint256 => uint8[]) rgbArray;
-    mapping (uint256 => CustomStructs.Dimensions) dartDimension;
+    mapping (uint256 => CustomStructs.DartMeta) dartMeta;
 
     constructor(address payable _owner, uint256 _fee, address _proxyRegistryAddress) ERC721("DecentralizedArt", "DRT") {
         contractOwner = _owner;
@@ -32,13 +31,13 @@ contract DARToken is ERC721, Ownable {
     function getDarts() public view returns(CustomStructs.DartResp[] memory) {
         CustomStructs.DartResp[] memory _darts = new CustomStructs.DartResp[](_currentTokenID);
         for (uint16 i = 0; i < _currentTokenID; i++) {
-            uint8[] memory _rgbArray = rgbArray[i];
-            CustomStructs.Dimensions memory _dimensions = dartDimension[i];
+            CustomStructs.DartMeta memory _meta = dartMeta[i];
             CustomStructs.DartResp memory resp = CustomStructs.DartResp({
                 dartId: i,
                 owner: ownerOf(i),
-                rgbArray: _rgbArray,
-                dimensions: _dimensions
+                name: _meta.name,
+                rgbaArray: _meta.rgbaArray,
+                dimensions: _meta.dimensions
             });
              _darts[i] = resp;
         }
@@ -46,21 +45,28 @@ contract DARToken is ERC721, Ownable {
     }
 
     function getDart(uint256 _tokenId) public view returns(CustomStructs.DartResp memory) {
+        CustomStructs.DartMeta memory _meta = dartMeta[_tokenId];
         return CustomStructs.DartResp({
             dartId: _tokenId,
+            name: _meta.name,
             owner: ownerOf(_tokenId),
-            rgbArray: rgbArray[_tokenId],
-            dimensions: dartDimension[_tokenId]
+            rgbaArray: _meta.rgbaArray,
+            dimensions: _meta.dimensions
         });
     }
 
-    function createDart(uint8[] memory _pixels, CustomStructs.Dimensions memory _dimensions) public payable 
+    function createDart(uint8[] memory _pixels, CustomStructs.Dimensions memory _dimensions, bytes32 _name) public payable 
                                                                     isValidLength(uint256((_pixels.length / 4)), _dimensions) 
                                                                     isPixelsValid(_pixels) { 
 
         require(msg.sender.balance >= msg.value, "Not enough funds");
-        rgbArray[_currentTokenID] = _pixels;
-        dartDimension[_currentTokenID] = _dimensions;
+
+        CustomStructs.DartMeta memory _meta = CustomStructs.DartMeta({
+            rgbaArray: _pixels,
+            name: _name,
+            dimensions: _dimensions
+        });
+        dartMeta[_currentTokenID] = _meta;
         contractOwner.transfer(msg.value);
         _mint(msg.sender, _currentTokenID);
         _incrementTokenId();
