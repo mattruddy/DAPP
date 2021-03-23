@@ -13,6 +13,7 @@ module.exports = function (deployer, network) {
       DARToken,
       "0x4606Ac07453a0eFa44cf5C9e17b17D909d1688D2",
       1000000,
-      proxyRegistryAddress
+      proxyRegistryAddress,
+      "https://cryptocanvas.vercel.app/api/darts/meta/"
     )
 }

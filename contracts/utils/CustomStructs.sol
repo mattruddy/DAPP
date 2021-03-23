@@ -8,18 +8,21 @@ library CustomStructs {
         uint256 width;
     }
 
-    struct DartMeta {
-        uint8[] rgbaArray;
-        Dimensions dimensions;
+    struct Meta {
         bytes32 name;
+        uint256 createDate;
     }
 
-    struct DartResp {
+    struct Content {
+        uint8[] rgbaArray;
+        Dimensions dimensions;
+    }
+
+    struct MetaResp {
         uint256 dartId;
         bytes32 name;
         address owner;
-        uint8[] rgbaArray;
-        Dimensions dimensions;
+        uint256 createDate;
     }
     
 }

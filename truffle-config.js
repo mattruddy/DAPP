@@ -20,7 +20,7 @@ module.exports = {
     ropsten: {
       provider: () => {
         return new HDWalletProvider(
-          "deputy broom lawsuit hire destroy demise pelican inhale shrimp scene bitter rib",
+          "apology cancel prize worth balcony excuse fragile kit garlic name client lamp",
           "https://ropsten.infura.io/v3/60420780afe54f0c9916f68730909f78",
           0
         )
@@ -30,7 +30,7 @@ module.exports = {
     rinkeby: {
       provider: () => {
         return new HDWalletProvider(
-          "deputy broom lawsuit hire destroy demise pelican inhale shrimp scene bitter rib",
+          "apology cancel prize worth balcony excuse fragile kit garlic name client lamp",
           "https://rinkeby.infura.io/v3/60420780afe54f0c9916f68730909f78",
           0
         )
